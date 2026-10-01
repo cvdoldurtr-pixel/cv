@@ -1,0 +1,22 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+  functions = "netlify/functions"
+
+[functions]
+  node_bundler = "esbuild"
+
+# Yönlendirmeler public/_redirects dosyasındadır (temiz URL -> .html, sonra SPA yedek kuralı).
+
+# PayTR ödeme sonrası bizim sayfamızı kendi iframe'i içinde gösterir; bu yüzden yalnızca kendimiz ve PayTR çerçeveleyebilir.
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Content-Security-Policy = "frame-ancestors 'self' https://www.paytr.com"
+
+[dev]
+  command = "npm run dev"
+  port = 8888
+  targetPort = 5173
