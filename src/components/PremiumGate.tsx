@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { X, Check, CreditCard, Shield, RefreshCw, Smartphone, FileText, KeyRound } from 'lucide-react';
-import { PLAN_PRICES, closeGate, pollOrder, usePremiumState, clearToast, openGate, restoreAccess, printPdf, PROFILE_LIMIT, type PlanId } from '../utils/premium';
+import { PLAN_PRICES, closeGate, pollOrder, usePremiumState, clearToast, openGate, restoreAccess, printPdf, getPdfName, PROFILE_LIMIT, type PlanId } from '../utils/premium';
 import { downloadImagePdf } from '../utils/pdfExport';
 import { track } from '../utils/track';
 
@@ -91,7 +91,7 @@ export default function PremiumGate() {
       track('pdf_image');
       closeGate();
       await new Promise((res) => setTimeout(res, 150));
-      await downloadImagePdf('CVDoldur-CV.pdf');
+      await downloadImagePdf(`${getPdfName()}.pdf`);
     } catch (e) { setErr((e as Error).message || 'PDF oluşturulamadı'); openGate('pdfmenu'); }
     setPdfBusy(false);
   }
@@ -119,7 +119,7 @@ export default function PremiumGate() {
               className="w-full py-3 rounded-xl font-bold text-sm text-white flex items-center justify-center gap-2 bg-teal-700 hover:bg-teal-800 disabled:bg-slate-400">
               {busy ? <RefreshCw size={15} className="animate-spin" /> : <KeyRound size={15} />} Erişimi geri yükle
             </button>
-            <p className="text-[11px] text-slate-500 mt-3">Sipariş kodu, ödeme sonrası ekranda gösterilen koddur (CV… ile başlar). Süre, satın alma tarihinden itibaren 30 gündür; geri yükleme süreyi uzatmaz.</p>
+            <p className="text-[11px] text-slate-500 mt-3">Sipariş kodu, ödeme sonrası ekranda gösterilen koddur (CV… ile başlar). Süre, satın alma anından itibaren paketinize göre (7 veya 30 gün) işler; geri yükleme süreyi uzatmaz.</p>
             <button onClick={closeGate} className="w-full text-xs text-slate-400 hover:text-slate-600 mt-2 py-1">Kapat</button>
           </div>
         ) : gate === 'pdfmenu' ? (

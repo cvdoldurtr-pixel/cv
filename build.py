@@ -244,7 +244,7 @@ for i,(t,d) in enumerate(steps,1):
 b+='''    <h2>CV'de Kaçınmanız Gerekenler</h2>
     '''+ul(["Yazım ve dil bilgisi hataları","Herkese aynı CV'yi göndermek","Yaş, medeni hâl ve TC kimlik numarası gibi gereksiz kişisel veriler","İki sayfayı aşan uzunluk","Doğrulanamayan iddialar ve şişirilmiş unvanlar"],'g-x-list')+'''
     <p>Rol bazlı örnekler için <a href="/yazilimci-cv-ornegi">yazılımcı</a>, <a href="/pazarlamaci-cv-ornegi">pazarlamacı</a>, <a href="/satis-temsilcisi-cv-ornegi">satış temsilcisi</a> ve <a href="/yeni-mezun-cv-ornegi">yeni mezun</a> rehberlerine göz atın. CV'nizle birlikte bir <a href="/on-yazi-nasil-yazilir">ön yazı</a> göndermek de dönüşü artırır.</p>
-    <div class="g-inline-cta"><div class="g-inline-cta-box"><p><strong>Sekiz adımı tek ekranda uygulayın.</strong> Sihirbaz sizi adım adım yönlendirir, ATS skorunuzu gösterir.</p><a href="/?start=1" class="g-cta-btn">Ücretsiz CV Oluştur</a></div></div>
+    <div class="g-inline-cta"><div class="g-inline-cta-box"><p><strong>Sekiz adımı tek ekranda uygulayın.</strong> Sihirbaz sizi adım adım yönlendirir, CV kalite skorunuzu ve eksiklerinizi gösterir.</p><a href="/?start=1" class="g-cta-btn">Ücretsiz CV Oluştur</a></div></div>
 '''+faq_html(faq)+"  </article>\n\n"
 b+=tail("CV'nizi Bugün Hazırlayın","Sihirbazla 3 dakikada ATS uyumlu CV oluşturun.","/?start=1",['ats-uyumlu-cv-sablonu','ingilizce-cv-ornegi','on-yazi-nasil-yazilir','istanbul-cv-hazirlama','profesyonel-cv-hazirlama-hizmeti','yeni-mezun-cv-ornegi'])
 open(f'{PUB}/{slug}.html','w',encoding='utf-8').write(b)
@@ -402,3 +402,6 @@ print('pages:',len(allslugs))
 exec(open(ROOT+'/legal.py',encoding='utf-8').read())
 
 import siteshell; siteshell.main()
+
+# Meslek sayfalarındaki CTA butonları ilgili hazır örneği açsın (src/utils/starters.ts)
+import role_cta; role_cta.run(ROOT)

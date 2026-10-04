@@ -3,3 +3,7 @@ dist
 .env
 .env.*
 .netlify
+tests/*.png
+tests/*.pdf
+!tests/ornek-cv.pdf
+tests/results.json

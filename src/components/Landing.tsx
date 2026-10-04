@@ -1,7 +1,6 @@
-import { 
-  Sparkles, CheckCircle2, Zap, Shield, FileCheck, 
-  Globe, Smartphone, ArrowRight, Star, Brain, 
-  Target, Award, TrendingUp, Users, Lock
+import {
+  CheckCircle2, Shield, FileCheck, ArrowRight, Star, Brain,
+  Target, Users, Lock, FileUp, Briefcase,
 } from 'lucide-react';
 import { useState } from 'react';
 import { NAV, LEGAL_LINKS } from '../utils/navData';
@@ -77,31 +76,47 @@ const cityGuides = [
 interface LandingProps {
   onStart: () => void;
   onApplyStarter?: (data: CVData) => void;
+  onImport?: () => void;
 }
 
-export default function Landing({ onStart, onApplyStarter }: LandingProps) {
+export default function Landing({ onStart, onApplyStarter, onImport }: LandingProps) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [allStarters, setAllStarters] = useState(false);
   const features = [
+    { icon: FileUp, title: 'Mevcut CV\'nizi Yükleyin', desc: 'PDF, Word veya LinkedIn profilinizi yükleyin; bilgileriniz forma otomatik dolsun. Sıfırdan yazmadan, tek tıkla yeni şablona taşıyın.' },
     { icon: Target, title: 'İlana Özel CV (ücretli paketlerde)', desc: 'İlanı yapıştırın: özet, başarı maddeleri ve ön yazı o ilana göre yeniden yazılır, olası mülakat soruları çıkarılır. Her ilana aynı CV’yi göndermeyin.' },
-    { icon: Brain, title: 'Akıllı İçerik Asistanı', desc: 'Pozisyonunuza özel profesyonel özet ve başarı cümleleri önerir. Tek tıkla uygula.' },
     { icon: Target, title: 'Ücretsiz İlan Eşleştirme', desc: 'İlan metnini yapıştırın; uyum yüzdenizi ve eksik anahtar kelimeleri görün. Tarayıcınızda hesaplanır.' },
-    { icon: Shield, title: 'Türkiye\'ye Özel Alanlar', desc: 'Askerlik durumu, fotoğraf, doğum tarihi, medeni durum — TR iş piyasasına tam uyum.' },
-    { icon: FileCheck, title: '4 Premium Şablon', desc: 'Modern, Klasik, Yan Sütun ve Minimal. Bölüm sırası, yoğunluk ve görünürlük kontrolü.' },
-    { icon: Zap, title: 'PDF + ATS Metin', desc: 'Metinli (ATS okur) veya telefonda tek dokunuşla PDF. Düz metin olarak indirme ve kopyalama da var.' },
-    { icon: Lock, title: 'Şeffaf Fiyat', desc: 'Kayıt yok, otomatik yenileme yok. Önizleme ücretsiz; PDF için tek seferlik 30 günlük erişim.' },
+    { icon: Brain, title: 'CV Kalite Kontrolü', desc: 'Her başarı maddesi renkle puanlanır: rakamlı mı, yeterince açık mı? Doldurulmamış [X] kalırsa PDF öncesi uyarır.' },
+    { icon: Shield, title: 'Türkiye\'ye Özel Alanlar', desc: 'Askerlik, ehliyet (B, C, CE, SRC, psikoteknik), KPSS/YDS, referanslar ve fotoğraf. Doğum tarihi ve medeni durumu isterseniz gizleyin.' },
+    { icon: Users, title: '18 Meslek İçin Hazır Örnek', desc: 'Muhasebe (Logo, Mikro, Luca), şoför, öğretmen, hemşire, kasiyer, garson, teknisyen ve daha fazlası: kendi bilginizle düzenleyin.' },
+    { icon: Briefcase, title: 'Başvuru Takibi', desc: 'Hangi ilana hangi CV ile başvurduğunuzu, mülakat ve teklif durumunu tek yerde izleyin; takip zamanı gelince hatırlatsın.' },
+    { icon: FileCheck, title: '5 Şablon + İngilizce CV', desc: 'ATS Sade, Modern, Klasik, Yan Sütun ve Minimal. Tek tıkla İngilizce başlıklar; bölüm sırası ve yoğunluk kontrolü.' },
+    { icon: Lock, title: 'Şeffaf Fiyat', desc: 'Kayıt yok, otomatik yenileme yok. Önizleme ücretsiz; filigransız PDF için tek seferlik paket.' },
   ];
 
   const stats = [
-    { value: '4', label: 'Profesyonel Şablon' },
-    { value: '3 dk', label: 'Ortalama Süre' },
-    { value: 'ATS', label: 'Uyumlu PDF' },
+    { value: '5', label: 'Şablon (ATS dahil)' },
+    { value: '18', label: 'Meslek Örneği' },
+    { value: 'PDF', label: 'Word · LinkedIn içe aktar' },
     { value: '0₺', label: 'Canlı Önizleme' },
   ];
 
   const faqs = [
     {
       q: 'CVDoldur ücretsiz mi?',
-      a: 'CV oluşturma, tüm şablonlar, canlı önizleme, ATS skoru ve günlük 3 AI kullanımı ücretsizdir. Filigransız PDF ve AI ile ilana özel CV uyarlama için paket gerekir (7 günlük ₺59, 30 günlük ₺149). Otomatik yenileme veya gizli abonelik yoktur.'
+      a: 'CV oluşturma, tüm şablonlar, canlı önizleme, CV kalite skoru, ilan eşleştirme, başvuru takibi, günde 2 CV içe aktarma ve günde 3 AI yazım hakkı ücretsizdir. Filigransız PDF ve AI ile ilana özel CV uyarlama için paket gerekir (7 günlük ₺59, 30 günlük ₺149). Otomatik yenileme veya gizli abonelik yoktur.'
+    },
+    {
+      q: 'Eski CV\'mi veya LinkedIn profilimi yükleyebilir miyim?',
+      a: 'Evet. "Mevcut CV\'mi yükle" ile PDF, Word (.docx) veya metin yükleyin; LinkedIn için profilinizde "Diğer → PDF olarak kaydet" ile indirdiğiniz PDF\'i kullanın. Dosya tarayıcınızda okunur, sunucuya yüklenmez; yalnızca çıkarılan metin bölümlere ayrılmak üzere yapay zekaya gönderilir ve saklanmaz. Aktarımdan sonra her bölümü kontrol etmeniz önerilir. Taranmış (fotoğraf) PDF\'ler okunamaz.'
+    },
+    {
+      q: 'İngilizce CV hazırlayabilir miyim?',
+      a: 'Evet. Tasarım adımında CV dilini "English" seçtiğinizde tüm başlıklar ve sabit ifadeler (ör. askerlik, ehliyet, dil seviyesi) İngilizce yazılır. İçeriği İngilizce yazmanız gerekir; AI özellikleri de seçilen dilde yazar.'
+    },
+    {
+      q: 'CV kalite skoru ne demek, ATS puanı mı?',
+      a: 'Hayır. CV kalite skoru, CV\'nizin eksiksizliğini ve içerik kalitesini (iletişim bilgisi geçerli mi, başarılar rakamla desteklenmiş mi, doldurulmamış [X] kaldı mı vb.) ölçer. Belirli bir ilana uyumunuzu görmek için İlan adımında ilan metnini yapıştırın; anahtar kelime uyum yüzdesi ayrıca hesaplanır. Hiçbir araç belirli bir şirketin ATS sonucunu garanti edemez.'
     },
     {
       q: 'İlana özel CV ne işe yarar, neden para vermeliyim?',
@@ -125,7 +140,7 @@ export default function Landing({ onStart, onApplyStarter }: LandingProps) {
     },
     {
       q: 'Verilerim güvende mi?',
-      a: 'CV bilgileriniz düzenleme sırasında tarayıcınızda (localStorage) tutulur. AI özelliklerini kullandığınızda yalnızca ilgili alanlar (ör. unvan, deneyim özeti) AI isteği için sunucumuz üzerinden yapay zeka sağlayıcısına iletilir ve CV\'niz sunucumuzda saklanmaz. Ödeme yaptığınızda e-posta adresiniz ve sipariş kaydınız tutulur. Ayrıntılar için Gizlilik Politikası ve KVKK Aydınlatma Metni sayfalarına bakın.'
+      a: 'CV bilgileriniz ve başvuru takip kayıtlarınız tarayıcınızda (localStorage) tutulur. AI özelliklerini kullandığınızda yalnızca ilgili alanlar (ör. unvan, deneyim özeti; CV içe aktarmada ise CV metni) AI isteği için sunucumuz üzerinden yapay zeka sağlayıcısına iletilir ve CV\'niz sunucumuzda saklanmaz. Ödeme yaptığınızda e-posta adresiniz ve sipariş kaydınız tutulur. Ayrıntılar için Gizlilik Politikası ve KVKK Aydınlatma Metni sayfalarına bakın.'
     },
   ];
 
@@ -188,7 +203,7 @@ export default function Landing({ onStart, onApplyStarter }: LandingProps) {
         <section className="relative max-w-6xl mx-auto px-4 pt-14 pb-24 text-center">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-teal-500/20 border border-teal-400/30 text-teal-200 rounded-full text-sm font-medium mb-8 backdrop-blur-sm">
             <Star size={14} className="fill-current text-amber-400" />
-            Yeni · İş İlanı Eşleştirme + ATS Uyumlu
+            Yeni · Mevcut CV'nizi yükleyin, 30 saniyede yenileyin
           </div>
           
           <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight mb-6 max-w-4xl mx-auto">
@@ -199,20 +214,29 @@ export default function Landing({ onStart, onApplyStarter }: LandingProps) {
           </h1>
           
           <p className="text-lg sm:text-xl text-slate-300 max-w-2xl mx-auto mb-10 leading-relaxed">
-            ATS uyumlu şablonlar, metin tabanlı PDF çıktısı. 
-            Akıllı içerik önerileri, Türkiye'ye özel alanlar, fiyatlar baştan açık.
+            ATS uyumlu şablonlar, iş ilanına göre eşleştirme ve kalite kontrolü.
+            Türkiye'ye özel alanlar, 18 meslek örneği, fiyatlar baştan açık.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-14">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center mb-4">
             <button
               onClick={onStart}
-              className="group flex items-center gap-3 px-8 py-4 bg-teal-500 text-white rounded-2xl font-semibold text-lg hover:bg-teal-400 transition shadow-xl shadow-teal-500/30 hover:-translate-y-1"
+              className="group w-full sm:w-auto justify-center flex items-center gap-3 px-8 py-4 bg-teal-500 text-white rounded-2xl font-semibold text-lg hover:bg-teal-400 transition shadow-xl shadow-teal-500/30 hover:-translate-y-1"
             >
               Ücretsiz CV Oluştur
               <ArrowRight size={20} className="group-hover:translate-x-1 transition" />
             </button>
-            <p className="text-sm text-slate-400">Kayıt yok • Önizleme ücretsiz • Paketler ₺59’dan</p>
+            {onImport && (
+              <button
+                onClick={onImport}
+                className="w-full sm:w-auto justify-center flex items-center gap-2.5 px-7 py-4 bg-white/10 border border-white/25 text-white rounded-2xl font-semibold text-lg hover:bg-white/15 transition"
+              >
+                <FileUp size={20} />
+                Mevcut CV'mi yükle
+              </button>
+            )}
           </div>
+          <p className="text-sm text-slate-400 mb-14">Kayıt yok • Önizleme ücretsiz • PDF, Word veya LinkedIn PDF'i • Paketler ₺59’dan</p>
 
           {/* Stats */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-3xl mx-auto">
@@ -230,10 +254,10 @@ export default function Landing({ onStart, onApplyStarter }: LandingProps) {
       {/* Role starters */}
       <section className="max-w-6xl mx-auto px-4 -mt-10 relative z-10 mb-8">
         <div className="bg-white rounded-2xl shadow-xl border border-slate-100 p-6">
-          <h2 className="text-lg font-bold text-slate-900 mb-1 text-center">Hızlı başlangıç</h2>
-          <p className="text-sm text-slate-500 text-center mb-4">Rolünüze uygun örnekle 10 saniyede başlayın, sonra kendi bilgilerinizle düzenleyin</p>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {starters.map((s) => (
+          <h2 className="text-lg font-bold text-slate-900 mb-1 text-center">Mesleğinizi seçin</h2>
+          <p className="text-sm text-slate-500 text-center mb-4">Mesleğinize uygun örnekle 10 saniyede başlayın; [X] yazan yerlere kendi gerçek bilgilerinizi yazın</p>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+            {(allStarters ? starters : starters.slice(0, 6)).map((s) => (
               <button
                 key={s.id}
                 onClick={() => onApplyStarter ? onApplyStarter(s.apply()) : onStart()}
@@ -245,10 +269,20 @@ export default function Landing({ onStart, onApplyStarter }: LandingProps) {
               </button>
             ))}
           </div>
-          <div className="text-center mt-4">
+          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mt-4">
+            {!allStarters && (
+              <button onClick={() => setAllStarters(true)} className="text-sm text-teal-700 font-semibold hover:underline">
+                Tüm meslekleri göster ({starters.length}) ↓
+              </button>
+            )}
             <button onClick={onStart} className="text-sm text-teal-700 font-medium hover:underline">
-              veya boş formla başla →
+              Boş formla başla →
             </button>
+            {onImport && (
+              <button onClick={onImport} className="text-sm text-teal-700 font-medium hover:underline">
+                Mevcut CV'mi yükle →
+              </button>
+            )}
           </div>
         </div>
       </section>
@@ -287,9 +321,9 @@ export default function Landing({ onStart, onApplyStarter }: LandingProps) {
           <h2 className="font-display text-3xl font-bold text-center text-slate-900 mb-12">Nasıl Çalışır?</h2>
           <div className="grid sm:grid-cols-3 gap-8">
             {[
-              { step: '01', title: 'Bilgileri Gir', desc: 'Wizard ile kişisel bilgi, deneyim, eğitim ve yeteneklerinizi doldurun.' },
-              { step: '02', title: 'Önerilerle Güçlendir', desc: 'Akıllı asistan önerilerini tek tıkla uygulayın, ATS skorunuzu görün.' },
-              { step: '03', title: 'PDF İndir', desc: 'Şablon ve renk seçin, anında profesyonel PDF\'inizi indirin.' },
+              { step: '01', title: 'Yükle veya Doldur', desc: 'Mevcut CV\'nizi yükleyin ya da mesleğinize uygun örnekle adım adım doldurun.' },
+              { step: '02', title: 'İlana Göre Güçlendir', desc: 'İlanı yapıştırın, eksik anahtar kelimeleri ve CV kalite skorunuzu görün.' },
+              { step: '03', title: 'PDF İndir, Takip Et', desc: 'Şablon seçin, PDF\'inizi indirin; başvurularınızı tek yerden takip edin.' },
             ].map((item, i) => (
               <div key={i} className="text-center">
                 <div className="text-4xl font-bold text-teal-200 mb-3">{item.step}</div>
@@ -342,7 +376,7 @@ export default function Landing({ onStart, onApplyStarter }: LandingProps) {
           Şehre Göre CV Rehberleri
         </h3>
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {cityGuides.map((g) => (
+          {cityGuides.slice(0, 8).map((g) => (
             <a
               key={g.href}
               href={g.href}
@@ -353,6 +387,21 @@ export default function Landing({ onStart, onApplyStarter }: LandingProps) {
             </a>
           ))}
         </div>
+        {cityGuides.length > 8 && (
+          <details className="mt-4 group">
+            <summary className="list-none cursor-pointer text-center text-sm font-semibold text-teal-700 hover:underline">
+              <span className="group-open:hidden">Tüm şehirleri göster ({cityGuides.length}) ↓</span>
+              <span className="hidden group-open:inline">Daha az göster ↑</span>
+            </summary>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-2 mt-4">
+              {cityGuides.slice(8).map((g) => (
+                <a key={g.href} href={g.href} className="block text-sm text-slate-700 hover:text-teal-700 py-1.5 border-b border-slate-100">
+                  {g.title.split(':')[0]}
+                </a>
+              ))}
+            </div>
+          </details>
+        )}
 
         <div className="mt-14 bg-gradient-to-br from-slate-900 to-teal-900 rounded-3xl p-8 text-center text-white">
           <h3 className="font-display text-2xl font-bold mb-2">CV'nizi Uzman Gözüyle Kontrol Ettirin</h3>
@@ -371,7 +420,7 @@ export default function Landing({ onStart, onApplyStarter }: LandingProps) {
         </div>
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
           {[
-            { name: 'Ücretsiz', price: '₺0', note: 'Önizleme ve düzenleme', items: ['CV oluşturma, canlı önizleme (filigranlı)', '4 şablon, CV Hazırlık skoru', 'İlan eşleştirme (uyum %)', 'Günlük 3 AI hakkı', '1 CV profili'] },
+            { name: 'Ücretsiz', price: '₺0', note: 'Önizleme ve düzenleme', items: ['CV oluşturma, canlı önizleme (filigranlı)', '5 şablon, CV kalite skoru', 'CV içe aktarma (günde 2)', 'İlan eşleştirme (uyum %)', 'Başvuru takibi', 'Günlük 3 AI hakkı', '1 CV profili'] },
             { name: 'Başlangıç', price: '₺59', note: '7 gün · tek seferlik', items: ['İlana özel CV uyarlama (günde 8 ilana kadar)', 'Filigransız PDF, tüm şablonlar', '3 CV profili', 'Ön yazı ve mülakat soruları'] },
             { name: 'Pro', price: '₺149', note: '30 gün · tek seferlik', best: true, items: ['İlana özel CV uyarlama (günde 20 ilana kadar)', 'Filigransız PDF, tüm şablonlar', '10 CV profili: her ilana ayrı CV', 'Ön yazı ve mülakat soruları', 'Sipariş koduyla erişimi geri yükleme'] },
             { name: 'Pro+', price: '₺499', note: '30 gün · tek seferlik', items: ['Başkaları için CV hazırlama ve teslim hakkı', 'İlana özel CV uyarlama (günde 66 ilana kadar)', '40 müşteri/CV profili', 'Kırtasiye, kariyer danışmanı, kurs için'] },

@@ -4,6 +4,9 @@
  */
 import { useSyncExternalStore } from 'react';
 import { track } from './track';
+import type { CVData } from '../types/cv';
+import { cvFileBase } from './cvView';
+import { findPlaceholders } from './quality';
 
 const TOKEN_KEY = 'cvdoldur_access';
 
@@ -65,15 +68,36 @@ const isMobileLike = () =>
   /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) ||
   (window.matchMedia('(pointer: coarse)').matches && window.innerWidth < 1024);
 
-/** Metinli (ATS uyumlu) PDF: tarayıcının yazdır penceresi → "PDF olarak kaydet". */
+/** Telefonda PDF istenince uygulama önizleme sekmesine geçer (App.tsx dinler) */
+export const PREVIEW_EVENT = 'cvdoldur:show-preview';
+
+/** PDF dosya adı (uzantısız), ör. Ahmet-Yilmaz-Yazilim-Muhendisi-CV */
+let pdfName = 'CV';
+export const getPdfName = () => pdfName;
+
+/**
+ * Metinli (ATS uyumlu) PDF: tarayıcının yazdır penceresi → "PDF olarak kaydet".
+ * Tarayıcılar kaydedilecek dosyaya sayfa başlığını (document.title) ad olarak verir;
+ * bu yüzden yazdırma süresince başlık CV dosya adına çevrilir.
+ */
 export function printPdf() {
   track('pdf_print');
   closeGate();
-  setTimeout(() => window.print(), 150);
+  const prev = document.title;
+  document.title = pdfName;
+  const restore = () => { document.title = prev; window.removeEventListener('afterprint', restore); };
+  window.addEventListener('afterprint', restore);
+  setTimeout(() => { window.print(); setTimeout(restore, 1500); }, 150);
 }
 
 /** PDF butonları bunu çağırır: premium ise yazdır, değilse ödeme penceresini aç. */
-export function requestPdf() {
+export function requestPdf(d?: CVData) {
+  if (d) {
+    pdfName = cvFileBase(d);
+    const ph = findPlaceholders(d);
+    if (ph.length && !window.confirm(`CV'nizde doldurulmamış [X] yer tutucusu var:\n\n• ${ph.join('\n• ')}\n\n[X] yerine kendi gerçek rakamınızı yazmanız önerilir. Yine de devam edilsin mi?`)) return;
+  }
+  try { window.dispatchEvent(new Event(PREVIEW_EVENT)); } catch { /* önemsiz */ }
   if (!isPremiumNow()) { openGate('pdf'); return; }
   if (isMobileLike()) openGate('pdfmenu');   // telefonda yazdır penceresi karışık: seçenek sun
   else printPdf();
@@ -99,7 +123,7 @@ export async function pollOrder(oid: string, maxSeconds = 600): Promise<boolean>
       const r = await fetch(`/.netlify/functions/premium-status?oid=${encodeURIComponent(oid)}`);
       const d = await r.json();
       if (d.status === 'paid' && d.token) { activate(d.token, d.plan, d.exp); return true; }
-      if (d.status === 'failed') return false;
+      if (d.status === 'failed' || d.status === 'amount_mismatch') return false;
     } catch { /* tekrar dene */ }
     await new Promise((res) => setTimeout(res, 3000));
   }

@@ -1,7 +1,15 @@
 import { CVData, emptyExperience } from '../../types/cv';
-import { Plus, Trash2, Sparkles } from 'lucide-react';
+import { Plus, Trash2, Sparkles, X, ChevronUp, ChevronDown } from 'lucide-react';
 import { useState } from 'react';
 import { aiAchievements, AILimitError } from '../../utils/aiApi';
+import { bulletQuality, BULLET_HINT, BulletLevel } from '../../utils/quality';
+
+const DOT: Record<BulletLevel, string> = {
+  placeholder: 'bg-red-500',
+  weak: 'bg-red-400',
+  ok: 'bg-amber-400',
+  strong: 'bg-emerald-500',
+};
 
 interface Props {
   data: CVData;
@@ -61,6 +69,25 @@ export default function ExperienceForm({ data, setData }: Props) {
     }));
   };
 
+  const removeAchievement = (id: string, index: number) => {
+    setData((prev) => ({
+      ...prev,
+      experiences: prev.experiences.map((e) =>
+        e.id === id ? { ...e, achievements: e.achievements.filter((_, i) => i !== index) } : e
+      ),
+    }));
+  };
+
+  const move = (index: number, dir: -1 | 1) => {
+    setData((prev) => {
+      const list = [...prev.experiences];
+      const j = index + dir;
+      if (j < 0 || j >= list.length) return prev;
+      [list[index], list[j]] = [list[j], list[index]];
+      return { ...prev, experiences: list };
+    });
+  };
+
   const addAchievement = (id: string) => {
     setData((prev) => ({
       ...prev,
@@ -88,12 +115,22 @@ export default function ExperienceForm({ data, setData }: Props) {
         <div key={exp.id} className="bg-slate-50 rounded-2xl p-4 border border-slate-100 relative">
           <div className="flex justify-between items-center mb-3">
             <span className="text-sm font-semibold text-slate-600">Deneyim #{idx + 1}</span>
-            <button
-              onClick={() => remove(exp.id)}
-              className="text-red-500 hover:bg-red-50 p-1.5 rounded-lg transition"
-            >
-              <Trash2 size={16} />
-            </button>
+            <div className="flex items-center gap-1">
+              <button type="button" onClick={() => move(idx, -1)} disabled={idx === 0} aria-label="Yukarı taşı" className="p-2 rounded-lg text-slate-500 hover:bg-slate-100 disabled:opacity-30">
+                <ChevronUp size={16} />
+              </button>
+              <button type="button" onClick={() => move(idx, 1)} disabled={idx === data.experiences.length - 1} aria-label="Aşağı taşı" className="p-2 rounded-lg text-slate-500 hover:bg-slate-100 disabled:opacity-30">
+                <ChevronDown size={16} />
+              </button>
+              <button
+                type="button"
+                onClick={() => { if ((!exp.company && !exp.position) || confirm('Bu deneyim silinsin mi?')) remove(exp.id); }}
+                aria-label="Deneyimi sil"
+                className="text-red-500 hover:bg-red-50 p-2 rounded-lg transition"
+              >
+                <Trash2 size={16} />
+              </button>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -120,7 +157,8 @@ export default function ExperienceForm({ data, setData }: Props) {
               <input
                 value={exp.startDate}
                 onChange={(e) => update(exp.id, 'startDate', e.target.value)}
-                placeholder="01.2022"
+                placeholder="03.2022"
+                aria-label="Başlangıç tarihi (Ay.Yıl)"
                 className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:border-teal-500 outline-none"
               />
             </div>
@@ -131,6 +169,7 @@ export default function ExperienceForm({ data, setData }: Props) {
                   value={exp.endDate}
                   onChange={(e) => update(exp.id, 'endDate', e.target.value)}
                   placeholder="12.2024"
+                  aria-label="Bitiş tarihi (Ay.Yıl)"
                   disabled={exp.current}
                   className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:border-teal-500 outline-none disabled:bg-slate-100"
                 />
@@ -160,18 +199,43 @@ export default function ExperienceForm({ data, setData }: Props) {
 
           <div className="mt-3">
             <label className="block text-xs font-medium text-slate-600 mb-1">Başarılar (ölçülebilir)</label>
-            {exp.achievements.map((ach, i) => (
-              <input
-                key={i}
-                value={ach}
-                onChange={(e) => updateAchievement(exp.id, i, e.target.value)}
-                placeholder="Örn: Satışları %25 artırdım"
-                className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:border-teal-500 outline-none mb-2"
-              />
-            ))}
+            {exp.achievements.map((ach, i) => {
+              const q = ach.trim() ? bulletQuality(ach) : null;
+              return (
+                <div key={i} className="mb-2">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`w-2.5 h-2.5 rounded-full shrink-0 ${q ? DOT[q] : 'bg-slate-200'}`}
+                      title={q ? BULLET_HINT[q] : 'Boş madde'}
+                      aria-hidden
+                    />
+                    <input
+                      value={ach}
+                      onChange={(e) => updateAchievement(exp.id, i, e.target.value)}
+                      placeholder="Örn: Aylık satış hedefini 6 ay üst üste %110 gerçekleştirdim"
+                      aria-label={`Başarı maddesi ${i + 1}`}
+                      aria-describedby={q && q !== 'strong' ? `${exp.id}-b${i}` : undefined}
+                      className={`flex-1 min-w-0 px-3 py-2 rounded-lg border text-sm focus:border-teal-500 outline-none ${q === 'placeholder' ? 'border-red-300 bg-red-50/40' : 'border-slate-200'}`}
+                    />
+                    <button type="button" onClick={() => removeAchievement(exp.id, i)} aria-label={`Başarı maddesi ${i + 1} sil`} className="w-8 h-8 shrink-0 flex items-center justify-center rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50">
+                      <X size={14} />
+                    </button>
+                  </div>
+                  {q && q !== 'strong' && q !== 'ok' && (
+                    <p id={`${exp.id}-b${i}`} className={`text-[11px] mt-0.5 ml-4 ${q === 'placeholder' ? 'text-red-600' : 'text-amber-700'}`}>{BULLET_HINT[q]}</p>
+                  )}
+                </div>
+              );
+            })}
+            <p className="text-[11px] text-slate-500 mb-1 flex items-center gap-3 flex-wrap">
+              <span className="inline-flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-500" /> rakamlı, güçlü</span>
+              <span className="inline-flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-400" /> iyi, rakam eklenebilir</span>
+              <span className="inline-flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-400" /> zayıf / [X] doldurulmamış</span>
+            </p>
             <button
+              type="button"
               onClick={() => addAchievement(exp.id)}
-              className="text-xs text-teal-600 hover:underline"
+              className="text-xs text-teal-700 hover:underline py-1"
             >
               + Başarı ekle
             </button>
@@ -182,7 +246,7 @@ export default function ExperienceForm({ data, setData }: Props) {
             >
               <Sparkles size={12} /> {busyId === exp.id ? 'Yazılıyor…' : 'AI ile başarı öner'}
             </button>
-            {errId === exp.id && <p className="text-xs text-red-600 mt-1">Önce pozisyon adını yazın veya biraz sonra tekrar deneyin.</p>}
+            {errId === exp.id && <p className="text-xs text-red-600 mt-1" role="alert">{exp.position.trim() ? 'AI şu an yanıt vermedi, biraz sonra tekrar deneyin.' : 'Önce pozisyon adını yazın.'}</p>}
           </div>
         </div>
       ))}

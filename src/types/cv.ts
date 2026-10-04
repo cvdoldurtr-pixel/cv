@@ -11,6 +11,18 @@ export interface PersonalInfo {
   portfolio: string;
   photo: string | null;
   summary: string;
+  /** Sürücü belgesi sınıfları, ör. ['B', 'SRC'] (v9) */
+  drivingLicense: string[];
+  /** Ofis / Hibrit / Uzaktan (v9) */
+  workPreference: string;
+  /** Seyahat engeli yok vb. (v9) */
+  travel: string;
+  /** Hemen başlayabilir, 1 ay ihbar vb. (v9) */
+  availability: string;
+  /** CV'de gösterilsin mi? Modern CV'lerde varsayılan kapalı (v9) */
+  showBirthDate: boolean;
+  showMaritalStatus: boolean;
+  showMilitaryStatus: boolean;
 }
 
 export interface Experience {
@@ -63,6 +75,15 @@ export interface Project {
   technologies: string;
 }
 
+export interface Reference {
+  id: string;
+  name: string;
+  /** Unvan ve kurum, ör. "Satış Müdürü, ABC A.Ş." */
+  title: string;
+  phone: string;
+  email: string;
+}
+
 export interface CoverLetter {
   recipient: string;
   company: string;
@@ -78,6 +99,7 @@ export type SectionKey =
   | 'languages'
   | 'certificates'
   | 'projects'
+  | 'references'
   | 'coverLetter';
 
 export interface SectionVisibility {
@@ -88,6 +110,7 @@ export interface SectionVisibility {
   languages: boolean;
   certificates: boolean;
   projects: boolean;
+  references: boolean;
   coverLetter: boolean;
 }
 
@@ -99,6 +122,9 @@ export interface CVData {
   languages: Language[];
   certificates: Certificate[];
   projects: Project[];
+  references: Reference[];
+  /** "Referanslar istenildiğinde verilecektir" satırını göster (v9) */
+  referencesOnRequest: boolean;
   coverLetter: CoverLetter;
   template: string;
   color: string;
@@ -127,6 +153,7 @@ export const defaultSections: SectionVisibility = {
   languages: true,
   certificates: true,
   projects: true,
+  references: true,
   coverLetter: true,
 };
 
@@ -138,6 +165,7 @@ export const defaultSectionOrder: SectionKey[] = [
   'languages',
   'certificates',
   'projects',
+  'references',
 ];
 
 export const defaultCVData: CVData = {
@@ -154,6 +182,13 @@ export const defaultCVData: CVData = {
     portfolio: '',
     photo: null,
     summary: '',
+    drivingLicense: [],
+    workPreference: '',
+    travel: '',
+    availability: '',
+    showBirthDate: false,
+    showMaritalStatus: false,
+    showMilitaryStatus: true,
   },
   experiences: [],
   educations: [],
@@ -161,6 +196,8 @@ export const defaultCVData: CVData = {
   languages: [],
   certificates: [],
   projects: [],
+  references: [],
+  referencesOnRequest: false,
   coverLetter: {
     recipient: '',
     company: '',
@@ -211,11 +248,26 @@ export const emptyLanguage = (): Language => ({
   level: 'B2',
 });
 
+/** Dil seviyeleri (CEFR). Eski kayıtlardaki 'Ana dil' yazımı 'Ana Dili' olarak düzeltilir. */
+export const LANGUAGE_LEVELS = ['Ana Dili', 'C2', 'C1', 'B2', 'B1', 'A2', 'A1'] as const;
+export const normalizeLanguageLevel = (lv: string): string =>
+  /^ana\s*dil/i.test((lv || '').trim()) ? 'Ana Dili' : lv;
+
+export const DRIVING_CLASSES = ['A1', 'A2', 'A', 'B', 'BE', 'C', 'CE', 'D', 'D1', 'E', 'F', 'G', 'SRC', 'Psikoteknik'] as const;
+
 export const emptyCertificate = (): Certificate => ({
   id: crypto.randomUUID(),
   name: '',
   issuer: '',
   date: '',
+});
+
+export const emptyReference = (): Reference => ({
+  id: crypto.randomUUID(),
+  name: '',
+  title: '',
+  phone: '',
+  email: '',
 });
 
 export const emptyProject = (): Project => ({
@@ -279,57 +331,6 @@ export const getAISuggestions = (title: string, field: 'summary' | 'achievement'
   }
 
   return [];
-};
-
-export interface ATSTip {
-  text: string;
-  points: number;
-  step: number;
-}
-
-export type QualityGrade = 'excellent' | 'strong' | 'developing' | 'incomplete';
-
-export const calculateATSScore = (data: CVData): { score: number; tips: ATSTip[]; grade: QualityGrade } => {
-  let score = 40;
-  const tips: ATSTip[] = [];
-
-  if (data.personal.fullName) score += 5;
-  else tips.push({ text: 'Ad Soyad eksik', points: 5, step: 0 });
-
-  if (data.personal.email && data.personal.phone) score += 8;
-  else tips.push({ text: 'E-posta ve telefon ekleyin', points: 8, step: 0 });
-
-  if (data.personal.summary && data.personal.summary.length > 50) score += 12;
-  else tips.push({ text: 'Özet eksik veya çok kısa (en az 2-3 cümle)', points: 12, step: 0 });
-
-  if (data.experiences.length > 0) score += 15;
-  else tips.push({ text: 'En az bir iş deneyimi ekleyin', points: 15, step: 1 });
-
-  if (data.experiences.some((e) => e.achievements.some((a) => a.length > 10))) score += 10;
-  else tips.push({ text: 'Ölçülebilir başarılar ekleyin (%, sayı)', points: 10, step: 1 });
-
-  if (data.educations.length > 0) score += 8;
-  else tips.push({ text: 'Eğitim bilgisi ekleyin', points: 8, step: 2 });
-
-  if (data.skills.length >= 4) score += 8;
-  else tips.push({ text: 'En az 4 yetenek ekleyin', points: 8, step: 3 });
-
-  if (data.languages.length > 0) score += 4;
-  else tips.push({ text: 'Dil bilgisi ekleyin', points: 4, step: 3 });
-
-  if (data.personal.linkedin) score += 3;
-  else tips.push({ text: 'LinkedIn linki yok', points: 3, step: 0 });
-
-  if (data.template === 'modern' || data.template === 'classic' || data.template === 'minimal') score += 5;
-  else tips.push({ text: 'Tek sütunlu şablonlar ATS için daha güvenli', points: 5, step: 5 });
-
-  if (data.jobDescription && data.jobDescription.length > 80) score += 2;
-
-  const final = Math.min(score, 98);
-  const grade: QualityGrade =
-    final >= 90 ? 'excellent' : final >= 75 ? 'strong' : final >= 55 ? 'developing' : 'incomplete';
-
-  return { score: final, tips, grade };
 };
 
 export const STORAGE_KEY = 'cvdoldur_data';

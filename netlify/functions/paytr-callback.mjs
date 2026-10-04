@@ -1,7 +1,7 @@
 // PayTR bildirim URL'si (PayTR panelinde tanımlanır). Ödemeyi doğrular ve kaydeder.
 import crypto from 'node:crypto';
 import { getStore } from '@netlify/blobs';
-import { PLANS, bump, sendMail } from './_lib.mjs';
+import { PLANS, bump, sendMail, paidAmountOk } from './_lib.mjs';
 
 export default async (req) => {
   if (req.method !== 'POST') return new Response('Method not allowed', { status: 405 });
@@ -16,9 +16,20 @@ export default async (req) => {
   const store = getStore('orders');
   const order = await store.get(oid, { type: 'json' });
   if (order && order.status !== 'paid') {
-    const ok = status === 'success';
+    const success = status === 'success';
+    // Ek güvenlik: başarılı bildirimde tahsil edilen tutar sipariş tutarını karşılamalı
+    const amountOk = !success || paidAmountOk(order, p);
+    const ok = success && amountOk;
     const paidAt = Date.now();
-    await store.setJSON(oid, { ...order, status: ok ? 'paid' : 'failed', total, paidAt });
+    await store.setJSON(oid, {
+      ...order,
+      status: ok ? 'paid' : success ? 'amount_mismatch' : 'failed',
+      total,
+      paymentAmount: p.get('payment_amount') || '',
+      testMode: p.get('test_mode') || '',
+      paidAt,
+    });
+    if (success && !amountOk) await bump('paid_mismatch');
     if (ok) {
       await bump('paid');
       const plan = PLANS[order.plan];

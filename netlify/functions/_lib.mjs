@@ -10,6 +10,20 @@ export const PLANS = {
   proplus: { label: 'CVDoldur Pro+ 30 Gün',    amountTL: 499, days: 30, aiPerDay: 200 },
 };
 
+/**
+ * PayTR bildirimindeki tutar, siparişin tutarını karşılıyor mu? (kuruş)
+ * payment_amount: sipariş tutarı; total_amount: müşteriden çekilen toplam (taksit farkı dahil, >= sipariş tutarı).
+ * Sipariş oluşturulurken kaydedilen tutar esas alınır; yoksa plan fiyatı.
+ */
+export function paidAmountOk(order, params) {
+  const expected = Number(order?.amount) || (PLANS[order?.plan] ? PLANS[order.plan].amountTL * 100 : NaN);
+  if (!Number.isFinite(expected) || expected <= 0) return false;
+  const pay = Number(params.get('payment_amount'));
+  const total = Number(params.get('total_amount'));
+  const paid = Number.isFinite(pay) && pay > 0 ? pay : total;
+  return Number.isFinite(paid) && paid >= expected;
+}
+
 export const json = (obj, status = 200) =>
   new Response(JSON.stringify(obj), { status, headers: { 'Content-Type': 'application/json' } });
 
@@ -47,6 +61,7 @@ export function verifyAccess(token) {
 export const EVENTS = [
   'app_open', 'start', 'gate_pdf', 'gate_ai', 'gate_tailor', 'checkout', 'paid',
   'pdf_print', 'pdf_image', 'tailor_core', 'tailor_bullets', 'tailor_extra', 'ai_use', 'restore_ok',
+  'import_open', 'import_ok', 'import_ai', 'apps_open', 'paid_mismatch',
 ];
 export async function bump(event) {
   try {

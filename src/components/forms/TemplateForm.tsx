@@ -8,6 +8,22 @@ interface Props {
 
 const templates = [
   {
+    id: 'ats',
+    name: 'ATS Sade',
+    desc: 'Robotların en kolay okuduğu düzen',
+    preview: (
+      <div className="w-full h-full bg-white p-1.5 text-[4px] leading-tight overflow-hidden font-sans">
+        <div className="font-bold text-[5px]">AD SOYAD</div>
+        <div className="text-slate-500 mb-1">email | telefon | şehir</div>
+        <div className="font-bold border-b border-slate-400 mb-0.5">PROFESYONEL ÖZET</div>
+        <div className="bg-slate-100 h-1.5 rounded mb-1" />
+        <div className="font-bold border-b border-slate-400 mb-0.5">İŞ DENEYİMİ</div>
+        <div className="bg-slate-100 h-1.5 rounded mb-0.5" />
+        <div className="bg-slate-100 h-1.5 rounded w-3/4" />
+      </div>
+    ),
+  },
+  {
     id: 'modern',
     name: 'Modern',
     desc: 'Temiz, ATS dostu, tek sütun',
@@ -47,7 +63,7 @@ const templates = [
   {
     id: 'sidebar',
     name: 'Yan Sütun',
-    desc: 'Modern iki sütun (fotoğraflı)',
+    desc: 'İki sütun, fotoğraflı (küçük firmalar için)',
     preview: (
       <div className="w-full h-full bg-white flex text-[4px] leading-tight overflow-hidden">
         <div className="w-1/3 bg-teal-700 text-white p-1">
@@ -100,6 +116,7 @@ const sectionLabels: { key: SectionKey; label: string }[] = [
   { key: 'languages', label: 'Diller' },
   { key: 'certificates', label: 'Sertifikalar' },
   { key: 'projects', label: 'Projeler' },
+  { key: 'references', label: 'Referanslar' },
   { key: 'coverLetter', label: 'Ön Yazı' },
 ];
 
@@ -130,11 +147,34 @@ export default function TemplateForm({ data, setData }: Props) {
   return (
     <div className="space-y-8">
       <section>
+        <h3 className="font-semibold text-slate-800 mb-1">CV dili</h3>
+        <p className="text-xs text-slate-500 mb-3">Başlıklar ve sabit ifadeler seçilen dilde yazılır. İçeriği o dilde yazmayı unutmayın; AI da bu dilde yazar.</p>
+        <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="CV dili">
+          {([['tr', 'Türkçe'], ['en', 'English']] as const).map(([id, label]) => (
+            <button
+              key={id}
+              type="button"
+              role="radio"
+              aria-checked={data.language === id}
+              onClick={() => setData((p) => ({ ...p, language: id }))}
+              className={`p-3 rounded-xl border-2 text-sm font-medium transition ${
+                data.language === id ? 'border-teal-600 bg-teal-50 text-teal-900' : 'border-slate-200 hover:border-slate-300 text-slate-700'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <section>
         <h3 className="font-semibold text-slate-800 mb-3">Şablon Seçin</h3>
         <div className="grid grid-cols-2 gap-3">
           {templates.map((t) => (
             <button
               key={t.id}
+              type="button"
+              aria-pressed={data.template === t.id}
               onClick={() => setData((p) => ({ ...p, template: t.id }))}
               className={`rounded-xl border-2 text-left transition overflow-hidden ${
                 data.template === t.id
@@ -173,6 +213,8 @@ export default function TemplateForm({ data, setData }: Props) {
               }`}
               style={{ backgroundColor: c.id }}
               title={c.name}
+              aria-label={`Renk: ${c.name}`}
+              aria-pressed={data.color === c.id}
             />
           ))}
         </div>
@@ -199,7 +241,7 @@ export default function TemplateForm({ data, setData }: Props) {
 
       <section>
         <h3 className="font-semibold text-slate-800 mb-1">Bölüm sırası</h3>
-        <p className="text-xs text-slate-500 mb-3">Yukarı / aşağı ile sırayı değiştirin (Modern şablonda uygulanır)</p>
+        <p className="text-xs text-slate-500 mb-3">Yukarı / aşağı ile sırayı değiştirin. Yan Sütun şablonunda yetenek ve diller sol sütunda kalır.</p>
         <div className="space-y-1.5">
           {order.filter((k) => k !== 'coverLetter').map((key, index) => {
             const label = sectionLabels.find((s) => s.key === key)?.label || key;
@@ -213,6 +255,7 @@ export default function TemplateForm({ data, setData }: Props) {
                   type="button"
                   onClick={() => moveSection(index, -1)}
                   disabled={index === 0}
+                  aria-label={`${label} yukarı`}
                   className="p-1 rounded hover:bg-slate-100 disabled:opacity-30"
                 >
                   <ChevronUp size={16} />
@@ -220,6 +263,7 @@ export default function TemplateForm({ data, setData }: Props) {
                 <button
                   type="button"
                   onClick={() => moveSection(index, 1)}
+                  aria-label={`${label} aşağı`}
                   disabled={index === order.filter((k) => k !== 'coverLetter').length - 1}
                   className="p-1 rounded hover:bg-slate-100 disabled:opacity-30"
                 >
@@ -264,8 +308,9 @@ export default function TemplateForm({ data, setData }: Props) {
       <div className="bg-teal-50 rounded-xl p-4 text-sm text-teal-800">
         <p className="font-medium mb-1">ATS İpucu</p>
         <p>
-          "Modern" ve "Klasik" şablonlar ATS sistemleri için en güvenli seçeneklerdir.
-          Kariyer.net ve İŞKUR için tek sütunlu şablonlar önerilir.
+          Büyük şirketler ve kurumsal ilanlar için “ATS Sade” veya “Modern” en güvenli seçeneklerdir.
+          Kariyer.net, LinkedIn ve İŞKUR'a yüklerken tek sütunlu şablon kullanın; Yan Sütun daha çok elden/e-postayla
+          verilen başvurular için uygundur.
         </p>
       </div>
     </div>

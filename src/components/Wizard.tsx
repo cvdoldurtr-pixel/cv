@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { CVData, calculateATSScore } from '../types/cv';
+import { CVData } from '../types/cv';
+import { calculateQuality, IssueLevel } from '../utils/quality';
 import PersonalForm from './forms/PersonalForm';
 import ExperienceForm from './forms/ExperienceForm';
 import EducationForm from './forms/EducationForm';
@@ -25,8 +26,19 @@ const steps = [
   { id: 3, title: 'Yetenekler & Diğer', short: 'Yetenek' },
   { id: 4, title: 'Ön Yazı (Opsiyonel)', short: 'Ön Yazı' },
   { id: 5, title: 'İş İlanı Eşleştirme', short: 'İlan' },
-  { id: 6, title: 'Şablon & ATS', short: 'Tasarım' },
+  { id: 6, title: 'Şablon, Dil & Kontrol', short: 'Tasarım' },
 ];
+
+const LEVEL_STYLE: Record<IssueLevel, string> = {
+  error: 'text-red-700',
+  warn: 'text-amber-800',
+  tip: 'text-slate-600',
+};
+const LEVEL_DOT: Record<IssueLevel, string> = {
+  error: 'bg-red-500',
+  warn: 'bg-amber-400',
+  tip: 'bg-slate-300',
+};
 
 const gradeLabel: Record<string, string> = {
   excellent: 'Mükemmel',
@@ -38,7 +50,8 @@ const gradeLabel: Record<string, string> = {
 export default function Wizard({ data, setData, step, setStep }: WizardProps) {
   const next = () => setStep((s) => Math.min(s + 1, steps.length - 1));
   const prev = () => setStep((s) => Math.max(s - 1, 0));
-  const ats = calculateATSScore(data);
+  const ats = calculateQuality(data);
+  const tips = ats.issues;
   const [showAtsDetail, setShowAtsDetail] = useState(false);
   const [showChecklist, setShowChecklist] = useState(false);
   const completion = getCompletionChecklist(data);
@@ -50,6 +63,9 @@ export default function Wizard({ data, setData, step, setStep }: WizardProps) {
           {steps.map((s) => (
             <button
               key={s.id}
+              type="button"
+              tabIndex={-1}
+              aria-hidden
               onClick={() => setStep(s.id)}
               className={`flex-1 h-1.5 rounded-full transition-all ${
                 s.id <= step ? 'bg-teal-600' : 'bg-slate-200'
@@ -57,24 +73,26 @@ export default function Wizard({ data, setData, step, setStep }: WizardProps) {
             />
           ))}
         </div>
-        <div className="flex justify-between text-[10px] sm:text-xs text-slate-500 overflow-x-auto gap-1">
+        <nav className="flex justify-between text-[11px] sm:text-xs text-slate-500 overflow-x-auto gap-1" aria-label="CV adımları">
           {steps.map((s) => (
-            <span
+            <button
+              type="button"
               key={s.id}
-              className={`cursor-pointer hover:text-teal-600 whitespace-nowrap ${s.id === step ? 'text-teal-700 font-semibold' : ''}`}
+              aria-current={s.id === step ? 'step' : undefined}
+              className={`py-1 px-0.5 hover:text-teal-600 whitespace-nowrap ${s.id === step ? 'text-teal-700 font-semibold' : ''}`}
               onClick={() => setStep(s.id)}
             >
               {s.short}
-            </span>
+            </button>
           ))}
-        </div>
+        </nav>
       </div>
 
       <div className="px-4 py-2 bg-gradient-to-r from-slate-50 to-teal-50 border-b border-slate-100">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Target size={16} className="text-teal-600" />
-            <span className="text-xs font-medium text-slate-600">CV Hazırlık · {gradeLabel[ats.grade]}</span>
+            <span className="text-xs font-medium text-slate-600">CV Kalite Skoru · {gradeLabel[ats.grade]}</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-24 h-2 bg-slate-200 rounded-full overflow-hidden">
@@ -90,8 +108,10 @@ export default function Wizard({ data, setData, step, setStep }: WizardProps) {
             }`}>
               {ats.score}
             </span>
-            {ats.tips.length > 0 && (
+            {tips.length > 0 && (
               <button
+                type="button"
+                aria-expanded={showAtsDetail}
                 onClick={() => setShowAtsDetail(!showAtsDetail)}
                 className="flex items-center gap-1 text-xs font-medium text-teal-700 hover:text-teal-900 bg-teal-100/80 hover:bg-teal-100 px-2 py-1 rounded-lg transition"
               >
@@ -101,9 +121,9 @@ export default function Wizard({ data, setData, step, setStep }: WizardProps) {
             )}
           </div>
         </div>
-        {showAtsDetail && ats.tips.length > 0 && (
+        {showAtsDetail && tips.length > 0 && (
           <div className="mt-2 pt-2 border-t border-teal-100/50 space-y-1.5">
-            {ats.tips.map((tip, i) => (
+            {tips.map((tip, i) => (
               <button
                 key={i}
                 onClick={() => {
@@ -112,8 +132,11 @@ export default function Wizard({ data, setData, step, setStep }: WizardProps) {
                 }}
                 className="w-full flex items-center justify-between text-left text-xs px-2 py-1.5 rounded-lg hover:bg-white/80 transition group"
               >
-                <span className="text-amber-800 group-hover:text-teal-800">{tip.text}</span>
-                <span className="text-teal-600 font-semibold whitespace-nowrap ml-2">+{tip.points} puan</span>
+                <span className={`flex items-start gap-2 ${LEVEL_STYLE[tip.level]} group-hover:text-teal-800`}>
+                  <span className={`mt-1 w-2 h-2 rounded-full shrink-0 ${LEVEL_DOT[tip.level]}`} aria-hidden />
+                  {tip.text}
+                </span>
+                {tip.points > 0 && <span className="text-teal-600 font-semibold whitespace-nowrap ml-2">+{tip.points}</span>}
               </button>
             ))}
           </div>
@@ -171,13 +194,13 @@ export default function Wizard({ data, setData, step, setStep }: WizardProps) {
           {(step === 0 || step === 5) && <Sparkles size={18} className="text-amber-500" />}
         </div>
         <p className="text-sm text-slate-500 mb-6">
-          {step === 0 && 'İletişim, coğraf, askerlik ve akıllı önerilerle profesyonel özet'}
+          {step === 0 && 'İletişim, fotoğraf, askerlik, ehliyet ve akıllı önerilerle profesyonel özet'}
           {step === 1 && 'İş deneyimlerinizi ters kronolojik sırayla ekleyin. Başarıları ölçülebilir yazın.'}
           {step === 2 && 'Eğitim bilgilerinizi ekleyin'}
-          {step === 3 && 'Yetenekler, diller, sertifikalar ve projeler'}
+          {step === 3 && 'Yetenekler, diller, sertifika/sınavlar, projeler ve referanslar'}
           {step === 4 && 'Başvurduğunuz pozisyon için özel ön yazı / motivasyon mektubu'}
           {step === 5 && 'İlan metnini yapıştırın — eksik anahtar kelimeleri görün ve yeteneklere ekleyin'}
-          {step === 6 && 'Şablon, renk, yoğunluk, bölüm sırası ve görünürlük'}
+          {step === 6 && 'CV dili, şablon, renk, yoğunluk, bölüm sırası ve son kontrol'}
         </p>
 
         {step === 0 && <PersonalForm data={data} setData={setData} />}
@@ -189,20 +212,22 @@ export default function Wizard({ data, setData, step, setStep }: WizardProps) {
         {step === 6 && (
           <>
             <TemplateForm data={data} setData={setData} />
-            {ats.tips.length > 0 && (
+            {tips.length > 0 && (
               <div className="mt-6 bg-amber-50 border border-amber-200 rounded-xl p-4">
                 <h4 className="font-semibold text-amber-800 text-sm mb-2 flex items-center gap-2">
-                  <Target size={16} /> CV Hazırlık Önerileri
+                  <Target size={16} /> Göndermeden önce kontrol
                 </h4>
                 <ul className="space-y-1.5">
-                  {ats.tips.map((tip, i) => (
+                  {tips.map((tip, i) => (
                     <li key={i}>
                       <button
                         onClick={() => setStep(tip.step)}
                         className="w-full flex items-center justify-between text-sm text-amber-700 hover:text-teal-700 hover:bg-amber-100/50 rounded-lg px-2 py-1.5 transition text-left"
                       >
-                        <span className="flex gap-2"><span>•</span> {tip.text}</span>
-                        <span className="text-teal-600 font-semibold whitespace-nowrap">+{tip.points}</span>
+                        <span className={`flex items-start gap-2 ${LEVEL_STYLE[tip.level]}`}>
+                          <span className={`mt-1.5 w-2 h-2 rounded-full shrink-0 ${LEVEL_DOT[tip.level]}`} aria-hidden /> {tip.text}
+                        </span>
+                        {tip.points > 0 && <span className="text-teal-600 font-semibold whitespace-nowrap">+{tip.points}</span>}
                       </button>
                     </li>
                   ))}
@@ -211,15 +236,16 @@ export default function Wizard({ data, setData, step, setStep }: WizardProps) {
             )}
             {ats.score >= 85 && (
               <div className="mt-4 bg-emerald-50 border border-emerald-200 rounded-xl p-4 text-sm text-emerald-800">
-                🎉 CV'niz eksiksiz görünüyor. Bu skor tamamlanma ve kalite kontrolüdür; belirli bir ATS sonucunu garanti etmez.
+                CV'niz güçlü görünüyor. Bu skor içerik kalitesini ölçer; belirli bir ATS sonucunu garanti etmez. Her ilan için “İlan” adımında uyumu ayrıca kontrol edin.
               </div>
             )}
           </>
         )}
       </div>
 
-      <div className="p-4 border-t border-slate-100 bg-white flex gap-3">
+      <div className="p-3 sm:p-4 border-t border-slate-100 bg-white flex gap-3 sticky bottom-0 z-10">
         <button
+          type="button"
           onClick={prev}
           disabled={step === 0}
           className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
@@ -237,7 +263,7 @@ export default function Wizard({ data, setData, step, setStep }: WizardProps) {
           </button>
         ) : (
           <button
-            onClick={requestPdf}
+            onClick={() => requestPdf(data)}
             className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl btn-primary"
           >
             <Printer size={18} />

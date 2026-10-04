@@ -40,7 +40,7 @@ export default async (req) => {
     });
     const data = await r.json();
     if (data.status !== 'success') return json({ error: 'PayTR: ' + (data.reason || 'token alınamadı') }, 400);
-    await getStore('orders').setJSON(oid, { plan: planId, email, status: 'pending', createdAt: Date.now() });
+    await getStore('orders').setJSON(oid, { plan: planId, email, amount: Number(amount), status: 'pending', createdAt: Date.now() });
     return json({ iframeUrl: `https://www.paytr.com/odeme/guvenli/${data.token}`, oid });
   } catch (e) {
     return json({ error: 'PayTR servisine ulaşılamadı' }, 502);

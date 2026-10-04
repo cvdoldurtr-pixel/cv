@@ -10,6 +10,9 @@ export async function downloadImagePdf(fileName: string): Promise<void> {
   if (!targets.length) throw new Error('Önizleme bulunamadı');
 
   const pdf = new jsPDF({ unit: 'mm', format: 'a4', compress: true });
+  // Telefonda önizleme ekrana sığsın diye ölçeklenir; yakalama sırasında ölçek kaldırılır (bkz. index.css)
+  document.documentElement.classList.add('pdf-capturing');
+  try {
   const PW = 210, PH = 297;
   let first = true;
 
@@ -30,6 +33,9 @@ export async function downloadImagePdf(fileName: string): Promise<void> {
       first = false;
       pdf.addImage(slice.toDataURL('image/jpeg', 0.92), 'JPEG', 0, 0, PW, (h * PW) / canvas.width);
     }
+  }
+  } finally {
+    document.documentElement.classList.remove('pdf-capturing');
   }
   pdf.save(fileName);
 }

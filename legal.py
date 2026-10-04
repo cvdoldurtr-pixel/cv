@@ -67,6 +67,8 @@ PAGES['gizlilik-politikasi'] = ('Gizlilik Politikası', 'CVDoldur gizlilik polit
     <ul>
       <li>CV bilgileriniz düzenleme sırasında <strong>tarayıcınızın yerel depolamasında (localStorage)</strong> tutulur; hesap açmanız gerekmez.</li>
       <li><strong>AI özelliklerini</strong> (özet, başarı maddesi, ön yazı, ilana özel uyarlama) kullandığınızda, yalnızca o istek için gereken alanlar (ör. unvan, deneyim ve başarı maddeleri, beceriler, yapıştırdığınız iş ilanı metni, ön yazıda ad ve şirket) sunucumuz üzerinden yapay zeka sağlayıcısına (Anthropic) gönderilir. CV'niz ve ilan metni sunucumuzda saklanmaz.</li>
+      <li><strong>CV içe aktarma</strong> ("Mevcut CV'mi yükle") kullandığınızda yüklediğiniz dosya (PDF/Word) sunucumuza gönderilmez; metin tarayıcınızda çıkarılır. Yalnızca bu metin, bölümlere ayrılması için sunucumuz üzerinden yapay zeka sağlayıcısına (Anthropic) iletilir ve saklanmaz. Günlük ücretsiz kullanım sınırı için IP adresiniz kısa süreli bir sayaçta kullanılır.</li>
+      <li><strong>Başvuru takibi</strong> ("Başvurularım") kayıtları yalnızca tarayıcınızda tutulur; sunucumuza gönderilmez.</li>
       <li><strong>Ödeme</strong> yaptığınızda e-posta adresiniz ve sipariş kaydınız sunucumuzda tutulur; erişim kodunuzu e-postayla göndermek için bir e-posta gönderim hizmeti kullanılabilir. Kart bilgileriniz bize ulaşmaz; ödemeyi PayTR alır.</li>
     </ul>
     <h2>Hangi veriler, neden işlenir?</h2>
@@ -82,7 +84,7 @@ PAGES['gizlilik-politikasi'] = ('Gizlilik Politikası', 'CVDoldur gizlilik polit
     <h2>Paylaşılan hizmet sağlayıcılar</h2>
     <ul>
       <li><strong>Netlify</strong> — barındırma, sunucu işlevleri ve sipariş kayıtları.</li>
-      <li><strong>Anthropic</strong> — AI metin üretimi (yalnızca AI özelliği kullanıldığında).</li>
+      <li><strong>Anthropic</strong> — AI metin üretimi ve CV içe aktarmada metnin bölümlere ayrılması (yalnızca bu özellikler kullanıldığında).</li>
       <li><strong>E-posta gönderim hizmeti</strong> — sipariş kodunuzu e-postayla iletmek için (yalnızca e-posta adresiniz ve sipariş bilgisi).</li>
       <li><strong>Web3Forms</strong> — iletişim formuna yazdığınız ad, e-posta, mesaj ve (varsa) sipariş kodunun bize e-postayla iletilmesi için. Form yalnızca siz gönderdiğinizde çalışır.</li>
       <li><strong>PayTR</strong> — ödeme altyapısı (kart bilgisini PayTR toplar ve işler).</li>

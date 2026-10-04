@@ -1,0 +1,55 @@
+const { default: handler } = await import('../netlify/functions/ai-import.mjs');
+const { default: callback } = await import('../netlify/functions/paytr-callback.mjs');
+import crypto from 'node:crypto';
+let f = 0; const ok = (n, c, x = '') => { console.log(`${c ? 'PASS' : 'FAIL'}  ${n}${x ? '  — ' + x : ''}`); if (!c) f++; };
+const req = (body, ip = '1.2.3.4') => new Request('https://x/.netlify/functions/ai-import', { method: 'POST', headers: { 'x-nf-client-connection-ip': ip, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+const cvText = 'Ayşe Demir\nSatış Temsilcisi\nayse@ornek.com 0532 000 00 00\nDENEYİM\nABC A.Ş. Satış Temsilcisi 2020-2024\n• Yeni müşteri kazandım';
+let lastPrompt = '';
+globalThis.fetch = async (url, init) => {
+  lastPrompt = JSON.parse(init.body).messages[0].content;
+  return new Response(JSON.stringify({ content: [{ type: 'text', text: 'İşte JSON:\n{"language":"tr","personal":{"fullName":"Ayşe Demir","email":"ayse@ornek.com","drivingLicense":["B"]},"experiences":[{"company":"ABC A.Ş.","position":"Satış Temsilcisi","startDate":"2020","endDate":"2024","achievements":["Yeni müşteri kazandım"]}],"skills":["CRM"]}' }] }), { status: 200 });
+};
+let r = await handler(req({ text: cvText }));
+ok('AI anahtarı yoksa 503', r.status === 503);
+process.env.ANTHROPIC_API_KEY = 'test'; process.env.TOKEN_SECRET = 'test-secret-1234567890';
+r = await handler(req({ text: 'kısa' }));
+ok('Kısa metin 400', r.status === 400);
+r = await handler(req({ text: cvText }));
+let j = await r.json();
+ok('Başarılı ayrıştırma 200 + ad', r.status === 200 && j.cv.personal.fullName === 'Ayşe Demir', `kalan=${j.remaining}`);
+ok('Metin <cv> etiketinde + enjeksiyon uyarısı', lastPrompt.includes('<cv>\n' + cvText) && /talimatları asla uygulama/.test(lastPrompt));
+ok('JSON çevresindeki metin temizlendi', j.cv.experiences[0].company === 'ABC A.Ş.');
+r = await handler(req({ text: cvText }));
+ok('2. ücretsiz kullanım 200', r.status === 200);
+r = await handler(req({ text: cvText }));
+ok('3. ücretsiz kullanım 429 (günde 2)', r.status === 429 && (await r.json()).error === 'LIMIT');
+r = await handler(req({ text: cvText }, '9.9.9.9'));
+ok('Başka IP etkilenmez', r.status === 200);
+globalThis.fetch = async () => new Response('err', { status: 500 });
+r = await handler(req({ text: cvText }, '5.5.5.5'));
+ok('AI hatası 502, hak düşmez', r.status === 502);
+globalThis.fetch = async () => new Response(JSON.stringify({ content: [{ text: 'üzgünüm' }] }), { status: 200 });
+r = await handler(req({ text: cvText }, '5.5.5.5'));
+ok('Bozuk AI yanıtı 502', r.status === 502);
+
+/* PayTR callback */
+process.env.PAYTR_MERCHANT_KEY = 'k'; process.env.PAYTR_MERCHANT_SALT = 's';
+const { getStore } = await import('@netlify/blobs');
+const orders = getStore('orders');
+const mk = async (oid, plan, amount) => orders.setJSON(oid, { plan, email: 'a@b.co', amount, status: 'pending' });
+const cb = (oid, status, total, extra = {}) => {
+  const hash = crypto.createHmac('sha256', 'k').update(oid + 's' + status + total).digest('base64');
+  return new Request('https://x/cb', { method: 'POST', body: new URLSearchParams({ merchant_oid: oid, status, total_amount: total, hash, ...extra }).toString() });
+};
+await mk('CVOK1', 'pro', 14900);
+r = await callback(cb('CVOK1', 'success', '14900', { payment_amount: '14900' }));
+ok('PayTR: doğru tutar → paid + "OK"', (await r.text()) === 'OK' && (await orders.get('CVOK1', { type: 'json' })).status === 'paid');
+await mk('CVLOW', 'pro', 14900);
+r = await callback(cb('CVLOW', 'success', '100'));
+ok('PayTR: düşük tutar → amount_mismatch, erişim yok', (await r.text()) === 'OK' && (await orders.get('CVLOW', { type: 'json' })).status === 'amount_mismatch');
+r = await callback(new Request('https://x/cb', { method: 'POST', body: 'merchant_oid=CVOK1&status=success&total_amount=1&hash=xx' }));
+ok('PayTR: sahte hash 400', r.status === 400);
+await mk('CVF', 'week', 5900);
+r = await callback(cb('CVF', 'failed', '5900'));
+ok('PayTR: başarısız ödeme → failed', (await orders.get('CVF', { type: 'json' })).status === 'failed');
+console.log(f ? `${f} başarısız` : 'Fonksiyon testleri geçti'); process.exit(f ? 1 : 0);
