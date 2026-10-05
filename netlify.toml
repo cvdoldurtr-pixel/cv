@@ -22,3 +22,9 @@
   command = "npm run dev"
   port = 8888
   targetPort = 5173
+
+# pdf.js çalışanı .mjs uzantılı; tarayıcı modül olarak yükleyebilsin diye türü açıkça belirtilir
+[[headers]]
+  for = "/assets/*.mjs"
+  [headers.values]
+    Content-Type = "text/javascript; charset=utf-8"
