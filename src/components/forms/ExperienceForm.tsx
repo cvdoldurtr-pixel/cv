@@ -5,7 +5,7 @@ import { aiAchievements, AILimitError } from '../../utils/aiApi';
 import { bulletQuality, BULLET_HINT, BulletLevel } from '../../utils/quality';
 
 const DOT: Record<BulletLevel, string> = {
-  placeholder: 'bg-red-500',
+  placeholder: 'bg-amber-400',
   weak: 'bg-red-400',
   ok: 'bg-amber-400',
   strong: 'bg-emerald-500',
@@ -215,14 +215,14 @@ export default function ExperienceForm({ data, setData }: Props) {
                       placeholder="Örn: Aylık satış hedefini 6 ay üst üste %110 gerçekleştirdim"
                       aria-label={`Başarı maddesi ${i + 1}`}
                       aria-describedby={q && q !== 'strong' ? `${exp.id}-b${i}` : undefined}
-                      className={`flex-1 min-w-0 px-3 py-2 rounded-lg border text-sm focus:border-teal-500 outline-none ${q === 'placeholder' ? 'border-red-300 bg-red-50/40' : 'border-slate-200'}`}
+                      className={`flex-1 min-w-0 px-3 py-2 rounded-lg border text-sm focus:border-teal-500 outline-none ${q === 'placeholder' ? 'border-amber-300 bg-amber-50/40' : 'border-slate-200'}`}
                     />
                     <button type="button" onClick={() => removeAchievement(exp.id, i)} aria-label={`Başarı maddesi ${i + 1} sil`} className="w-8 h-8 shrink-0 flex items-center justify-center rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50">
                       <X size={14} />
                     </button>
                   </div>
                   {q && q !== 'strong' && q !== 'ok' && (
-                    <p id={`${exp.id}-b${i}`} className={`text-[11px] mt-0.5 ml-4 ${q === 'placeholder' ? 'text-red-600' : 'text-amber-700'}`}>{BULLET_HINT[q]}</p>
+                    <p id={`${exp.id}-b${i}`} className={`text-[11px] mt-0.5 ml-4 ${'text-amber-700'}`}>{BULLET_HINT[q]}</p>
                   )}
                 </div>
               );
@@ -230,7 +230,7 @@ export default function ExperienceForm({ data, setData }: Props) {
             <p className="text-[11px] text-slate-500 mb-1 flex items-center gap-3 flex-wrap">
               <span className="inline-flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-500" /> rakamlı, güçlü</span>
               <span className="inline-flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-400" /> iyi, rakam eklenebilir</span>
-              <span className="inline-flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-400" /> zayıf / [X] doldurulmamış</span>
+              <span className="inline-flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-400" /> zayıf</span>
             </p>
             <button
               type="button"

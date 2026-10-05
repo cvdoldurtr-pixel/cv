@@ -66,9 +66,9 @@ async function newPage(viewport, opts = {}) {
   ok('Şoför örneği: doğum tarihi/medeni durum gizli', !/Doğum:/.test(prev));
   ok('Kalite skoru başlığı', await page.locator('text=CV Kalite Skoru').count() === 1);
   const scoreTxt = await page.locator('text=CV Kalite Skoru').locator('xpath=../..').innerText();
-  ok('[X] yer tutucu kalite uyarısı', true, scoreTxt.replace(/\s+/g, ' ').slice(0, 80));
+  ok('Hazır örnekte skor kırmızı değil (>=60)', Number((scoreTxt.match(/(\d+)\s*Detay/)||[])[1]) >= 60, scoreTxt.replace(/\s+/g, ' ').slice(0, 80));
   await page.click('button[aria-expanded]:has-text("Detay")');
-  ok('Detayda doldurulmamış [X] hatası listeleniyor', await page.locator('text=Doldurulmamış [X] var').count() >= 1);
+  ok('Detayda [X] hatırlatması (puan düşürmeden)', await page.locator('text=[X] yerlerine kendi rakamınızı yazın').count() >= 1);
   await page.screenshot({ path: OUT + '02-editor-sofor.png' });
 
   /* Kişisel adımı: e-posta doğrulama */

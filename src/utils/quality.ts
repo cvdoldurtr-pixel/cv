@@ -94,7 +94,8 @@ export function calculateQuality(d: CVData): { score: number; grade: QualityGrad
   });
 
   const bullets = d.experiences.flatMap((e) => e.achievements.map((a) => a.trim()).filter(Boolean));
-  const strong = bullets.filter((b) => bulletQuality(b) === 'strong').length;
+  // [X] içeren madde rakam yeri ayrılmış demektir: puanda güçlü sayılır (hatırlatma ayrıca gösterilir)
+  const strong = bullets.filter((b) => { const q = bulletQuality(b); return q === 'strong' || q === 'placeholder'; }).length;
   if (exps.length > 0) {
     add(bullets.length >= Math.min(2, exps.length * 2), 8, { text: 'Her deneyime 2-4 başarı maddesi yazın', step: 1, level: 'warn' });
     add(strong >= 1 && strong / Math.max(bullets.length, 1) >= 0.34, 10, {
@@ -118,8 +119,9 @@ export function calculateQuality(d: CVData): { score: number; grade: QualityGrad
 
   const ph = findPlaceholders(d);
   if (ph.length) {
-    final = Math.max(0, final - 15);
-    issues.unshift({ text: `Doldurulmamış [X] var: ${ph.join(', ')}`, points: 15, step: ph[0].startsWith('Ön') ? 4 : ph[0].startsWith('Profes') ? 0 : 1, level: 'error' });
+    // Puan düşürülmez (hazır örnekle başlayan kullanıcı kırmızı skorla karşılaşmasın);
+    // yalnızca hatırlatılır. Asıl kontrol PDF indirme anındadır (premium.ts → requestPdf).
+    issues.unshift({ text: `[X] yerlerine kendi rakamınızı yazın: ${ph.join(', ')}`, points: 0, step: ph[0].startsWith('Ön') ? 4 : ph[0].startsWith('Profes') ? 0 : 1, level: 'warn' });
   }
   if (d.template === 'sidebar') {
     issues.push({ text: 'İki sütunlu şablon bazı ATS sistemlerinde karışık okunur; büyük şirketlere ATS Sade veya Modern gönderin', points: 0, step: 6, level: 'tip' });
